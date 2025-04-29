@@ -1,50 +1,53 @@
-import Card from './Card'
-import Button from './Button'
-import Search from './Search'
-import React, {useState, useEffect} from "react";
-const CardList = ({data}) => {
+import React, { useState, useEffect } from 'react';
+import Card from './Card';
+import Button from './Button';
+import Search from './Search';
+
+const CardList = ({ data = [] }) => {
   const limit = 10;
-const defaultDataset = data.slice(0, limit);
-const [offset, setOffset] = useState(0);
-const [products, setProducts] = useState(defaultDataset);
-const handlePagination = (direction) => {
-  setOffset(prevOffset => prevOffset + (direction === 'next' ? limit : -limit));
-};
+  const [offset, setOffset] = useState(0);
+  const [products, setProducts] = useState(data.slice(0, limit));
 
+  const handlePagination = (direction) => {
+    setOffset((prev) =>
+      Math.max(0, prev + (direction === 'next' ? limit : -limit))
+    );
+  };
 
-useEffect(() => {
-  setProducts(data.slice(offset, offset + limit));
-}, [offset, limit, data]);
+  const filterTags = (tagQuery) => {
+    const filtered = data.filter((p) =>
+      tagQuery ? p.tags.some(({ title }) => title === tagQuery) : true
+    );
+    setOffset(0);
+    setProducts(filtered.slice(0, limit));
+  };
 
-const filterTags = (tagQuery) =>{
-  const filtered  = data.filter(product =>{
-    if(!tagQuery){
-      return product
-    }
-    return product.tags.find(({title})=> title === tagQuery)
-  })
-  setOffset(0)
-  setProducts(filtered)
-}
-
+  useEffect(() => {
+    setProducts(data.slice(offset, offset + limit));
+  }, [offset, data]);
 
   return (
     <div className="cf pa2">
-      <Search handleSearch={filterTags}/>
-      <div className="mt2 mb2">
-        {products && products.map((product) => (
-           <Card key={product.id} {...product} />
-
+      <Search handleSearch={filterTags} />
+      <div className="mt2 mb2 flex flex-wrap">
+        {products.map((product) => (
+          <Card key={product.id} {...product} />
         ))}
       </div>
-      <div className="flex items-center justify-center pa4">   
-      <Button text="Previous" handleClick={() => handlePagination('previous')} />
-      <Button text="Next" handleClick={() => handlePagination('next')} disabled={offset + limit >= products.length} />
-
+      <div className="flex items-center justify-center pa4">
+        <Button
+          text="Previous"
+          handleClick={() => handlePagination('previous')}
+          disabled={offset === 0}
+        />
+        <Button
+          text="Next"
+          handleClick={() => handlePagination('next')}
+          disabled={offset + limit >= data.length}
+        />
+      </div>
     </div>
-    </div>
-
   );
-}
+};
 
 export default CardList;
